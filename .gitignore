@@ -1,0 +1,9 @@
+.env
+
+node_modules/
+
+# Mengabaikan folder hasil build React/Vite
+dist/
+
+# Mengabaikan folder guidelines
+guidelines/
