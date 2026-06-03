@@ -3,12 +3,12 @@ import { Outlet, Link, useLocation } from "react-router";
 import { LayoutDashboard, FileText, Radar, Briefcase, GraduationCap, Settings, Bell, Menu, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuthStore } from "../store/useAuthStore"; 
+import logoSkillAlign from "../../assets/logo-SkillAlign.png";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   
-
   const { user } = useAuthStore(); 
 
   const getInitials = (name?: string) => {
@@ -31,16 +31,18 @@ export function DashboardLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Mobile Header */}
+    <div className="min-h-screen bg-background flex flex-col md:flex-row overflow-hidden">
+      
+      {/* 1. Mobile Header (Logo diperbesar jadi h-10/h-12) */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <div className="w-4 h-4 rounded-full bg-primary" />
-          </div>
-          <span className="font-heading font-semibold">SkillAlign</span>
-        </div>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 cursor-pointer">
+        <Link to="/" className="flex items-center">
+          <img 
+            src={logoSkillAlign} 
+            alt="Logo SkillAlign" 
+            className="h-10 sm:h-12 w-auto" 
+          />
+        </Link>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 cursor-pointer text-text-secondary hover:text-foreground">
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -50,13 +52,19 @@ export function DashboardLayout() {
         "fixed md:sticky top-0 left-0 z-40 h-screen w-64 border-r border-border bg-card flex flex-col transition-transform duration-300",
         sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
-        <div className="p-6 hidden md:flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <div className="w-4 h-4 rounded-full bg-primary" />
-          </div>
-          <span className="text-xl font-heading font-semibold">SkillAlign</span>
+        
+        {/* 2. Desktop Logo (Diperbesar jadi h-14) */}
+        <div className="px-6 py-8 hidden md:flex items-center mb-2">
+          <Link to="/" className="flex items-center">
+            <img 
+              src={logoSkillAlign} 
+              alt="Logo SkillAlign" 
+              className="h-14 w-auto transition-all duration-300" 
+            />
+          </Link>
         </div>
 
+        {/* User Profile */}
         <div className="px-4 py-6 md:py-0 mb-6 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-surface-fill flex items-center justify-center font-semibold text-text-secondary uppercase">
             {getInitials(user?.name)}
@@ -71,6 +79,7 @@ export function DashboardLayout() {
           </div>
         </div>
 
+        {/* Menu Navigasi */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname === '/dashboard' && item.path === '/dashboard');
@@ -96,6 +105,7 @@ export function DashboardLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        
         {/* Topbar */}
         <header className="h-16 border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30 px-6 flex items-center justify-between">
           <h1 className="text-lg font-medium text-foreground">
