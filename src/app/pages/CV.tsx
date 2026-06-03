@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import api from "../lib/axios";
 import { HistoryCard } from "../components/HistoryCard";
 import { CVUploadWizard } from "../components/CVUploadWizard"; 
+import { InfoPopup } from "../components/InfoPopup";
 import { 
   FileText, Download, Upload as UploadIcon, ExternalLink, 
   Loader2, Clock, Trash2 
@@ -190,6 +191,19 @@ export function CV() {
             <div className="space-y-6">
               <Card className="p-5 border-border bg-card">
                 <h3 className="font-heading font-medium mb-4 text-foreground">Extracted Info</h3>
+                <InfoPopup 
+                    title="Tentang Ekstraksi CV" 
+                    content={
+                      <>
+                        <p>Informasi di bawah ini diekstrak secara otomatis oleh AI dengan membaca teks dari file PDF Anda (Format <i>Applicant Tracking System / ATS</i>).</p>
+                        <p className="mt-2 text-amber-500 font-medium">⚠️ Jika ada informasi yang salah atau tidak terdeteksi:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>Mungkin desain CV Anda terlalu rumit (banyak grafis/kolom) sehingga sulit dibaca AI.</li>
+                          <li>Gunakan format CV ATS-Friendly (teks lurus standar) untuk hasil terbaik.</li>
+                        </ul>
+                      </>
+                    } 
+                  />
                 <div className="space-y-4">
                   <div>
                     <div className="text-xs text-text-secondary uppercase tracking-wider mb-1">Current Role</div>
@@ -208,6 +222,15 @@ export function CV() {
               
               <Card className="p-5 border-border bg-card">
                 <h3 className="font-heading font-medium mb-4 text-foreground">Top Skills Recognized</h3>
+                <InfoPopup 
+                    title="Bagaimana AI Menemukan Skill Ini?" 
+                    content={
+                      <>
+                        <p>AI memindai dokumen Anda dan membandingkannya dengan miliaran basis data keterampilan global.</p>
+                        <p className="mt-2">Skill yang muncul di sini adalah keahlian teknis (<i>hard skills</i>) dan non-teknis (<i>soft skills</i>) dominan yang berhasil diidentifikasi AI dari pengalaman kerja dan deskripsi proyek Anda.</p>
+                      </>
+                    } 
+                  />
                 <div className="flex flex-wrap gap-2">
                   {cvAnalysis.skills.length > 0 ? (
                     cvAnalysis.skills.map(skill => (

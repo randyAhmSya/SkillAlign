@@ -33,28 +33,39 @@ export function Overview() {
     activeMatchId ? OVERVIEW_CACHE.matchDetails[activeMatchId] || null : null
   );
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  
+  const fromNewAnalysis = location.state?.fromNewAnalysis || false;
 
   useEffect(() => {
     const fetchHistory = async () => {
-      if (OVERVIEW_CACHE.history && OVERVIEW_CACHE.historyPage === historyPage) {
+      // Tampilkan cache langsung agar UI terasa instan
+      if (OVERVIEW_CACHE.history && OVERVIEW_CACHE.historyPage === historyPage && !fromNewAnalysis) {
         setHistory(OVERVIEW_CACHE.history);
         setHistoryTotalPages(OVERVIEW_CACHE.historyTotalPages);
-        return; 
+      } else {
+        setIsHistoryLoading(true);
       }
 
-      setIsHistoryLoading(true);
       try {
+        // Ambil data terbaru dari backend secara diam-diam
         const response = await api.get(`/match/history`, {
           params: { page: historyPage, limit: 5 }
         });
         
         const historyData = response.data.data;
+        
+        // Timpa data di layar dengan data yang paling fresh
         setHistory(historyData);
         setHistoryTotalPages(response.data.meta.totalPages);
 
         OVERVIEW_CACHE.history = historyData;
         OVERVIEW_CACHE.historyPage = historyPage;
         OVERVIEW_CACHE.historyTotalPages = response.data.meta.totalPages;
+
+        if (fromNewAnalysis) {
+          navigate('.', { state: { matchId: activeMatchId }, replace: true });
+        }
+
       } catch (error) {
         console.error("Gagal memuat history:", error);
       } finally {
@@ -63,7 +74,7 @@ export function Overview() {
     };
 
     fetchHistory();
-  }, [historyPage]); 
+  }, [historyPage, fromNewAnalysis]); 
 
   useEffect(() => {
     if (!activeMatchId) {
@@ -72,16 +83,19 @@ export function Overview() {
     }
 
     const fetchMatchDetail = async () => {
+      // Tampilkan cache langsung agar grafik langsung muncul
       if (OVERVIEW_CACHE.matchDetails[activeMatchId]) {
         setMatchDetail(OVERVIEW_CACHE.matchDetails[activeMatchId]);
-        return;
+      } else {
+        setIsDetailLoading(true);
       }
 
-      setIsDetailLoading(true);
       try {
+        // Tarik data terbaru dari backend
         const response = await api.get(`/match/${activeMatchId}`);
         const detailData = response.data.data;
         
+        // Update layar dan cache dengan data hasil Analisis Ulang!
         setMatchDetail(detailData);
         OVERVIEW_CACHE.matchDetails[activeMatchId] = detailData; 
       } catch (error: any) {
@@ -94,7 +108,6 @@ export function Overview() {
 
     fetchMatchDetail();
   }, [activeMatchId]); 
-
 
   const handleGoBack = () => {
     navigate('.', { state: {}, replace: true }); 

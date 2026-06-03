@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID: string;
-  readonly BACKEND_BASE_URL: string;
+  readonly VITE_BACKEND_BASE_URL: string;
 }
 
 interface ImportMeta {

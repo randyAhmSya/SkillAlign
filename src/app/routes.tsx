@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       { path: "forgot-password", Component: ForgotPassword },
       { path: "reset-password", Component: ResetPassword },
       { path: "upload", Component: Upload },
-      { path: "insights", Component: Insights },
+      // { path: "insights", Component: Insights },
     ],
   },
   {

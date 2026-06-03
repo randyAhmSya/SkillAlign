@@ -2,15 +2,29 @@ import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import { LayoutDashboard, FileText, Radar, Briefcase, GraduationCap, Settings, Bell, Menu, X } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useAuthStore } from "../store/useAuthStore"; 
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  
+
+  const { user } = useAuthStore(); 
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   const navItems = [
     { icon: LayoutDashboard, label: "Overview", path: "/dashboard" },
     { icon: FileText, label: "My CV", path: "/dashboard/cv" },
-    { icon: Radar, label: "Skill Gap", path: "/dashboard/skills" },
+    // { icon: Radar, label: "Skill Gap", path: "/dashboard/skills" },
     { icon: Briefcase, label: "Job Matches", path: "/dashboard/jobs" },
     { icon: GraduationCap, label: "Learning Path", path: "/dashboard/learning" },
     { icon: Settings, label: "Settings", path: "/dashboard/settings" },
@@ -26,7 +40,7 @@ export function DashboardLayout() {
           </div>
           <span className="font-heading font-semibold">SkillAlign</span>
         </div>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 cursor-pointer">
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -44,12 +58,16 @@ export function DashboardLayout() {
         </div>
 
         <div className="px-4 py-6 md:py-0 mb-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-surface-fill flex items-center justify-center font-semibold text-text-secondary">
-            JD
+          <div className="w-10 h-10 rounded-full bg-surface-fill flex items-center justify-center font-semibold text-text-secondary uppercase">
+            {getInitials(user?.name)}
           </div>
-          <div>
-            <div className="font-medium text-sm">John Doe</div>
-            <div className="text-xs text-text-secondary">john.doe@example.com</div>
+          <div className="overflow-hidden">
+            <div className="font-medium text-sm truncate" title={user?.name}>
+              {user?.name || "Pengguna"}
+            </div>
+            <div className="text-xs text-text-secondary truncate" title={user?.email}>
+              {user?.email || "email@belum-terdaftar.com"}
+            </div>
           </div>
         </div>
 
@@ -87,7 +105,7 @@ export function DashboardLayout() {
             <span className="text-sm text-text-secondary hidden sm:inline-block">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
-            <button className="relative p-2 text-text-secondary hover:text-foreground rounded-full hover:bg-surface-fill transition-colors">
+            <button className="relative p-2 text-text-secondary hover:text-foreground rounded-full hover:bg-surface-fill transition-colors cursor-pointer">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary" />
             </button>

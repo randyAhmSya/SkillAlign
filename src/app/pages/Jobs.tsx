@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Search, MapPin, SlidersHorizontal, BookmarkPlus, Loader2, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { SkillPill } from "../components/SkillPill";
+import { InfoPopup } from "../components/InfoPopup";
 import api from "../lib/axios"; 
 import { toast } from "sonner"; 
 
@@ -29,6 +30,8 @@ export function Jobs() {
   const [isLoading, setIsLoading] = useState(true); 
   const [cvId, setCvId] = useState<string | null>(CACHE.cvId);
   const [analyzingId, setAnalyzingId] = useState<string | null>(null); 
+
+  const [progressText, setProgressText] = useState("Menganalisis...");
   
   const [page, setPage] = useState(CACHE.page);
   const [totalPages, setTotalPages] = useState(CACHE.totalPages);
@@ -63,6 +66,11 @@ export function Jobs() {
 
           const response = await api.get("/match/recommendations/jobs");
           const rawAiData = response.data.data || [];
+
+          if (rawAiData.length > 0 && rawAiData[0].cvUploadId) {
+            setCvId(rawAiData[0].cvUploadId);
+            CACHE.cvId = rawAiData[0].cvUploadId;
+          }
           
           const mappedAiJobs = rawAiData.map((match: any, index: number) => ({
             id: match.jobPostingId || match.id,
@@ -71,8 +79,9 @@ export function Jobs() {
             title: match.jobPosting?.title || "Posisi Tidak Diketahui",
             companyName: match.jobPosting?.company?.companyName || "Perusahaan Anonim",
             industry: "Rekomendasi AI",
-            isAnalyzed: true, 
-            score: match.matchScore ? Math.round(match.matchScore) : 0, 
+            isAnalyzed: false, 
+            aiScore: match.matchScore ? Math.round(match.matchScore) : 0, 
+            score: 0, 
             description: `[Rank #${index + 1}] ${match.aiSummary} - Pekerjaan ini disarankan oleh AI berdasarkan profil CV Anda.`,
             matchedSkills: [], 
             missingSkills: []
@@ -124,7 +133,24 @@ export function Jobs() {
       return;
     }
     setAnalyzingId(jobId.toString());
+    toast.info("AI membedah profil CV...");
+
+    const progressSteps = [
+      "Mencocokkan skill...",
+      "Menghitung skor gap...",
+      "Menyusun Learning Path...",
+      "Hampir selesai..."
+    ];
+    let step = 0;
+    const progressInterval = setInterval(() => {
+      if (step < progressSteps.length) {
+        setProgressText(progressSteps[step]);
+        step++;
+      }
+    }, 1500);
+
     toast.info("AI sedang menganalisis kecocokanmu...");
+
     try {
       const response = await api.post("/cv/analyze", {
         cvUploadId: cvId,
@@ -132,7 +158,7 @@ export function Jobs() {
       });
       const resultId = response.data.data.matchResultId;
       toast.success("Analisis selesai!");
-      navigate(`/dashboard?matchId=${resultId}`);
+      navigate('/dashboard', { state: { matchId: resultId } });
     } catch (error: any) {
       console.error("AI Analysis error:", error);
       toast.error(error.response?.data?.message || "AI gagal menganalisis lowongan ini.");
@@ -206,7 +232,6 @@ export function Jobs() {
         </div>
       )}
       
-      {/* ✅ Diperbaiki: jobs.length diganti menjadi displayedJobs.length */}
       {isLoading && displayedJobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-text-secondary">
           <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
@@ -220,7 +245,6 @@ export function Jobs() {
       ) : (        
          <>
           <div className={`grid md:grid-cols-2 gap-6 transition-opacity duration-300 ${isLoading ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
-            {/* ✅ Diperbaiki: jobs.map diganti menjadi displayedJobs.map */}
             {displayedJobs.map((job) => {
               const requiredSkills = [...(job.matchedSkills || []), ...(job.missingSkills || [])];
               
@@ -245,6 +269,25 @@ export function Jobs() {
                       </div>
 
                       <div className="text-sm font-medium mt-1">{job.salary}</div>
+                      
+                      {isAIMode && job.aiScore !== undefined && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-md text-xs font-semibold">
+                          <Sparkles size={14} />
+                          Skor Rekomendasi AI: {job.aiScore}%
+
+                          <InfoPopup 
+                            title="Apa itu Skor Rekomendasi AI?" 
+                            content={
+                              <>
+                                <p>Skor ini adalah hasil <b>penyortiran cepat</b> oleh AI berdasarkan kata kunci umum di CV Anda.</p>
+                                <p className="mt-2">Skor rendah (seperti 2% atau 5%) berarti AI menyarankan Anda untuk tidak membuang waktu mengambil pekerjaan ini karena kurang relevan.</p>
+                                <p className="mt-2">Klik tombol <b>Analisis Mendalam</b> untuk melihat perhitungan presisi dan mengetahui skill apa saja yang kurang!</p>
+                              </>
+                            }
+                          />
+
+                        </div>
+                      )}
                     </div>
                     
                     <div className="shrink-0 flex flex-col items-center gap-2">
@@ -292,7 +335,7 @@ export function Jobs() {
                       <Button 
                         className="flex-1 cursor-pointer border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300" 
                         variant="outline"
-                        onClick={() => navigate(`/dashboard?matchId=${job.matchId}`)}
+                        onClick={() => navigate('/dashboard', { state: { matchId: job.matchId } })}
                       >
                         Lihat Hasil Analisis
                       </Button>
@@ -321,7 +364,7 @@ export function Jobs() {
                       disabled={analyzingId === job.id.toString()}
                     >
                       {analyzingId === job.id.toString() ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      {analyzingId === job.id.toString() ? "Analyzing..." : "Analyze this job"}
+                      {analyzingId === job.id.toString() ? progressText : "Analisis Mendalam"}
                     </Button>
                   )}
 
