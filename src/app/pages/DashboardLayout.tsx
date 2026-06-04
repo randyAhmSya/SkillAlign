@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import { LayoutDashboard, FileText, Radar, Briefcase, GraduationCap, Settings, Bell, Menu, X } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -8,8 +8,27 @@ import logoSkillAlign from "../../assets/logo-SkillAlign.png";
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  
-  const { user } = useAuthStore(); 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { user, fetchUser } = useAuthStore(); 
+
+  useEffect(() => {
+    if (!user) {
+      fetchUser();
+    }
+  }, [user, fetchUser]);
+
+
+
+  useEffect(() => {
+    if (user) {
+
+      const photo = user.profile?.avatarUrl || user.avatar || user.picture || user.photo || user.image;
+      setAvatarUrl(photo || null);
+    }
+  }, [user]);
+
+
+
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -66,15 +85,29 @@ export function DashboardLayout() {
 
         {/* User Profile */}
         <div className="px-4 py-6 md:py-0 mb-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-surface-fill flex items-center justify-center font-semibold text-text-secondary uppercase">
-            {getInitials(user?.name)}
-          </div>
+
+          
+  {avatarUrl ? (
+    <img
+      src={avatarUrl}
+      alt={user?.name || "Profile"}
+      className="w-10 h-10 rounded-full object-cover"
+      referrerPolicy="no-referrer"
+      onError={() => setAvatarUrl(null)}
+    />
+  ) : (
+    <div className="w-10 h-10 rounded-full bg-surface-fill flex items-center justify-center font-semibold text-text-secondary uppercase">
+      {getInitials(user?.name)}
+    </div>
+  )}
+
+
           <div className="overflow-hidden">
             <div className="font-medium text-sm truncate" title={user?.name}>
-              {user?.name || "Pengguna"}
+              {user?.name || "Memuat..."}
             </div>
             <div className="text-xs text-text-secondary truncate" title={user?.email}>
-              {user?.email || "email@belum-terdaftar.com"}
+              {user?.email || "Memuat..."}
             </div>
           </div>
         </div>
